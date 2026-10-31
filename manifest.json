@@ -1,0 +1,13 @@
+{
+  "id": "./",
+  "name": "Taller Azteca",
+  "short_name": "Azteca",
+  "description": "Aplicación para registrar servicios, refacciones y cobros de Taller Azteca",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#111111",
+  "theme_color": "#b5121b",
+  "icons": []
+}
