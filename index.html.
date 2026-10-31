@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#171717">
+<title>Taller Azteca</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#111;color:white;font-family:Arial}
+header{text-align:center;background:#202020;padding:22px;border-bottom:3px solid #c62828}
+header h1{color:#ef4444;margin:0}
+header p{font-size:11px;letter-spacing:2px}
+main{padding:15px;max-width:650px;margin:auto}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:15px}
+button{padding:12px;border:0;border-radius:8px;background:#383838;color:white;font-weight:bold}
+button.active,.rojo{background:#c62828}
+section{display:none}
+section.active{display:block}
+.card{background:#222;padding:16px;border-radius:12px;margin-bottom:14px}
+h2{font-size:19px}
+label{display:block;margin:12px 0 5px;color:#ccc;font-size:13px}
+input,select,textarea{width:100%;padding:12px;background:#333;color:white;border:1px solid #555;border-radius:7px;font-size:15px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grande{font-size:26px;color:#ff5252;font-weight:bold}
+.item{padding:12px 0;border-bottom:1px solid #444}
+.completo{width:100%;margin-top:12px}
+small{color:#aaa}
+</style>
+</head>
+<body>
+<header>
+<h1>⚒ TALLER AZTECA</h1>
+<p>TU MOTO EN BUENAS MANOS</p>
+</header>
+<main>
+<nav>
+<button class="active" onclick="abrir('inicio',this)">Inicio</button>
+<button onclick="abrir('nuevo',this)">Nuevo trabajo</button>
+<button onclick="abrir('historial',this)">Historial</button>
+</nav>
+
+<section id="inicio" class="active">
+<div class="card">
+<small>DINERO COBRADO</small>
+<div class="grande" id="ingresos">$0.00</div>
+</div>
+<div class="card">
+<small>TRABAJOS REGISTRADOS</small>
+<div class="grande" id="cantidad">0</div>
+</div>
+<div class="card">
+<small>SALDOS PENDIENTES</small>
+<div class="grande" id="pendientes">$0.00</div>
+</div>
+<div class="card">
+<h2>Últimos trabajos</h2>
+<div id="ultimos">Sin registros todavía.</div>
+</div>
+</section>
+
+<section id="nuevo">
+<div class="card">
+<h2>Registrar servicio</h2>
+<label>Nombre del cliente</label>
+<input id="cliente" placeholder="Nombre del cliente">
+<label>Teléfono</label>
+<input id="telefono" placeholder="Teléfono">
+<label>Fecha</label>
+<input id="fecha" type="date">
+<label>Motocicleta</label>
+<input id="moto" placeholder="Ej. Italika FT150">
+<label>Placas</label>
+<input id="placas" placeholder="Opcional">
+<label>Trabajo realizado</label>
+<textarea id="trabajo" rows="3" placeholder="Describe la reparación"></textarea>
+<div class="grid">
+<div>
+<label>Mano de obra ($)</label>
+<input id="mano" type="number" min="0" value="0" oninput="calcular()">
+</div>
+<div>
+<label>Refacciones ($)</label>
+<input id="refacciones" type="number" min="0" value="0" oninput="calcular()">
+</div>
+</div>
+<label>Otros gastos ($)</label>
+<input id="gastos" type="number" min="0" value="0" oninput="calcular()">
+<label>Forma de pago</label>
+<select id="pago">
+<option>Efectivo</option>
+<option>Tarjeta</option>
+<option>Transferencia</option>
+<option>Pendiente</option>
+</select>
+<label>Dinero recibido ($)</label>
+<input id="abonado" type="number" min="0" value="0" oninput="calcular()">
+<div class="card">
+<small>TOTAL DEL SERVICIO</small>
+<div class="grande" id="total">$0.00</div>
+<small>Saldo pendiente: <b id="saldo">$0.00</b></small>
+</div>
+<button class="rojo completo" onclick="guardar()">GUARDAR TRABAJO</button>
+</div>
+</section>
+
+<section id="historial">
+<div class="card">
+<h2>Historial de servicios</h2>
+<input id="buscar" placeholder="Buscar cliente o motocicleta" oninput="mostrar()">
+<div id="lista"></div>
+</div>
+</section>
+</main>
+<script>
+let trabajos=JSON.parse(localStorage.getItem('azteca_trabajos')||'[]');
+const dinero=n=>Number(n||0).toLocaleString('es-MX',{style:'currency',currency:'MXN'});
+function abrir(id,b){
+document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+b.classList.add('active');
+actualizar();
+}
+function valor(id){return Number(document.getElementById(id).value)||0}
+function calcular(){
+let total=valor('mano')+valor('refacciones')+valor('gastos');
+let abonado=valor('abonado');
+document.getElementById('total').textContent=dinero(total);
+document.getElementById('saldo').textContent=dinero(Math.max(0,total-abonado));
+}
+function guardar(){
+let cliente=document.getElementById('cliente').value.trim();
+let moto=document.getElementById('moto').value.trim();
+let total=valor('mano')+valor('refacciones')+valor('gastos');
+let abonado=valor('abonado');
+if(!cliente||!moto){alert('Escribe el cliente y la motocicleta');return}
+if(total<=0||abonado>total||abonado<0){alert('Revisa los importes');return}
+let t={
+id:Date.now(),
+cliente,
+telefono:document.getElementById('telefono').value,
+fecha:document.getElementById('fecha').value,
+moto,
+placas:document.getElementById('placas').value,
+trabajo:document.getElementById('trabajo').value,
+mano:valor('mano'),
+refacciones:valor('refacciones'),
+gastos:valor('gastos'),
+total,
+abonado,
+saldo:total-abonado,
+pago:document.getElementById('pago').value
+};
+trabajos.unshift(t);
+localStorage.setItem('azteca_trabajos',JSON.stringify(trabajos));
+alert('¡Trabajo guardado correctamente!');
+['cliente','telefono','fecha','moto','placas','trabajo','mano','refacciones','gastos','abonado'].forEach(id=>document.getElementById(id).value=id==='mano'||id==='refacciones'||id==='gastos'||id==='abonado'?0:'');
+calcular();actualizar();
+}
+function mostrar(){
+let q=(document.getElementById('buscar')?.value||'').toLowerCase();
+let filtrados=trabajos.filter(t=>(t.cliente+' '+t.moto+' '+t.placas).toLowerCase().includes(q));
+document.getElementById('lista').innerHTML=filtrados.map(t=>`
+<div class="item">
+<b>${esc(t.cliente)}</b> — ${esc(t.moto)}
+<br><small>${esc(t.fecha||'Sin fecha')} · ${esc(t.trabajo||'Servicio')}</small>
+<br>Total: ${dinero(t.total)} · Pagado: ${dinero(t.abonado)}
+<br>Debe: ${dinero(t.saldo)}
+<br><button onclick="abonar(${t.id})">Registrar abono</button>
+<button onclick="imprimir(${t.id})">Comprobante</button>
+</div>`).join('')||'No hay resultados.';
+}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function abonar(id){
+let t=trabajos.find(x=>x.id===id);
+let n=Number(prompt('¿Cuánto abonó el cliente?'));
+if(!Number.isFinite(n)||n<=0||n>t.saldo)return alert('Cantidad no válida');
+t.abonado+=n;t.saldo-=n;
+localStorage.setItem('azteca_trabajos',JSON.stringify(trabajos));actualizar();
+}
+function imprimir(id){
+let t=trabajos.find(x=>x.id===id);
+let w=window.open('','_blank');
+if(!w)return alert('Permite ventanas emergentes para imprimir');
+w.document.write('<h1>TALLER AZTECA</h1><h3>Comprobante de servicio</h3><p>Cliente: '+esc(t.cliente)+'</p><p>Moto: '+esc(t.moto)+'</p><p>Trabajo: '+esc(t.trabajo)+'</p><p>Total: '+dinero(t.total)+'</p><p>Pagado: '+dinero(t.abonado)+'</p><p>Saldo: '+dinero(t.saldo)+'</p>');
+w.document.close();w.print();
+}
+function actualizar(){
+document.getElementById('ingresos').textContent=dinero(trabajos.reduce((a,t)=>a+t.abonado,0));
+document.getElementById('cantidad').textContent=trabajos.length;
+document.getElementById('pendientes').textContent=dinero(trabajos.reduce((a,t)=>a+t.saldo,0));
+document.getElementById('ultimos').innerHTML=trabajos.slice(0,4).map(t=>'<div class="item">'+esc(t.cliente)+' · '+esc(t.moto)+' · '+dinero(t.total)+'</div>').join('')||'Sin registros todavía.';
+mostrar();calcular();
+}
+actualizar();
+</script>
+</body>
+</html>
